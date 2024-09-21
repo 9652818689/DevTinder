@@ -19,6 +19,23 @@ app.post("/user/login",(req,res)=>{
 app.get("/user",userAuth,(req,res)=>{
     res.send("User Data send");
 })
+app.use("/",(err,req,res,next)=>{
+    //Log your Error
+    res.status(500).send("something went wrong!!")
+});
+
+app.get("/getUsersData",(req,res)=>{
+    // try{
+        throw new Error("asdfdsafdsaf");
+            res.send("User data sent")
+    // }catch(err){
+        // res.status(500).send("some error contact support team")
+    // }
+})
+app.use("/", (err,req,res,next)=>{
+    //Log your error
+    res.status(500).send("Something went wrong!!")
+})
 // app.get("/user",(req,res)=>{
 //     res.send("Data Fetched Successfully!")
 // });
