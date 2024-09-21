@@ -1,41 +1,63 @@
 const express = require('express');
 const { adminAuth, userAuth } = require('./middlewares/auth');
+const connectDB = require('./config/database');
+const User = require('./models/user');
 const app = express();
 
-app.use("/test",(req,res)=>{
-    res.send("Hello From the server!")
+connectDB().then(()=>{
+    console.log("Database connectin establisted..");
+    app.listen(3000,()=>{
+        console.log("Server is Successfully listening on port 3000");
+    })
+}).catch((err)=>{
+    console.log("Database cannot establisted...");
 })
 
-app.use("/admin",adminAuth);
-
-app.get('/admin/adminUser',(req,res)=>{
-    res.send("Admin User Data send!")
+app.post("/signup", async(req,res)=>{
+        const userObj = new User({
+            firstName:"vijay",
+            lastName:"kumar",
+            emailId:"vijay@kumar.com",
+            password:"vijay@123"
+        })
+        await userObj.save();
+        res.send("User Data Saved Successfully!")
 })
 
-app.post("/user/login",(req,res)=>{
-    res.send("User LoggedIn Successfully!");
-})
+// app.use("/test",(req,res)=>{
+//     res.send("Hello From the server!")
+// })
 
-app.get("/user",userAuth,(req,res)=>{
-    res.send("User Data send");
-})
-app.use("/",(err,req,res,next)=>{
-    //Log your Error
-    res.status(500).send("something went wrong!!")
-});
+// app.use("/admin",adminAuth);
 
-app.get("/getUsersData",(req,res)=>{
-    // try{
-        throw new Error("asdfdsafdsaf");
-            res.send("User data sent")
-    // }catch(err){
-        // res.status(500).send("some error contact support team")
-    // }
-})
-app.use("/", (err,req,res,next)=>{
-    //Log your error
-    res.status(500).send("Something went wrong!!")
-})
+// app.get('/admin/adminUser',(req,res)=>{
+//     res.send("Admin User Data send!")
+// })
+
+// app.post("/user/login",(req,res)=>{
+//     res.send("User LoggedIn Successfully!");
+// })
+
+// app.get("/user",userAuth,(req,res)=>{
+//     res.send("User Data send");
+// })
+// app.use("/",(err,req,res,next)=>{
+//     //Log your Error
+//     res.status(500).send("something went wrong!!")
+// });
+
+// app.get("/getUsersData",(req,res)=>{
+//     // try{
+//         throw new Error("asdfdsafdsaf");
+//             res.send("User data sent")
+//     // }catch(err){
+//         // res.status(500).send("some error contact support team")
+//     // }
+// })
+// app.use("/", (err,req,res,next)=>{
+//     //Log your error
+//     res.status(500).send("Something went wrong!!")
+// })
 // app.get("/user",(req,res)=>{
 //     res.send("Data Fetched Successfully!")
 // });
@@ -77,7 +99,3 @@ app.use("/", (err,req,res,next)=>{
 // }
 // )
 
-app.listen(3000,()=>{
-    console.log("Server is Successfully listening on port 3000");
-    
-})
