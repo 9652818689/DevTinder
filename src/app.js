@@ -3,6 +3,7 @@ const { adminAuth, userAuth } = require('./middlewares/auth');
 const connectDB = require('./config/database');
 const User = require('./models/user');
 const app = express();
+app.use(express.json());
 
 connectDB().then(()=>{
     console.log("Database connectin establisted..");
@@ -14,15 +15,52 @@ connectDB().then(()=>{
 })
 
 app.post("/signup", async(req,res)=>{
-        const userObj = new User({
-            firstName:"vijay",
-            lastName:"kumar",
-            emailId:"vijay@kumar.com",
-            password:"vijay@123"
-        })
-        await userObj.save();
-        res.send("User Data Saved Successfully!")
+    console.log(req.body);
+    const userObj = new User(req.body)
+    try{
+        let userres =  await userObj.save(); 
+        return res.status(200).send({message:"User Data Saved Successfully!",data:userres})
+    }catch(err){
+       return res.status(500).send("Failed to register the user"+err.message)
+    }
 })
+
+app.patch("/user/:userId", async (req, res) => {
+    let userId = req.params?.userId;
+    let data = req.body;
+  
+    try {
+      let ALLOWEDKEYS = ["firstName", "lastName", "password", "gender", "skills", "age"];
+      
+      let updatedKeysValid = Object.keys(data).every((key) => ALLOWEDKEYS.includes(key));
+      if (!updatedKeysValid) {
+        throw new Error("Cannot update: Invalid field(s) in update data.");
+      }
+  
+      if (data.skills && data.skills.length > 10) {
+        throw new Error("Cannot add more than 10 skills.");
+      }
+  
+      let updatedRes = await User.findByIdAndUpdate(
+        { _id: userId },
+        data,
+        {
+          returnDocument: "after", 
+          runValidators: true,    
+        }
+      );
+  
+      if (!updatedRes) {
+        return res.status(404).send({ message: "User not found." });
+      }
+  
+      res.status(200).send({ message: "User updated successfully!", data: updatedRes });
+    } catch (err) {
+      console.error("Failed to update the user:", err.message);
+      res.status(500).send({ message: "Failed to update the user", error: err.message });
+    }
+  });
+  
 
 // app.use("/test",(req,res)=>{
 //     res.send("Hello From the server!")
