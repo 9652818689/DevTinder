@@ -2,8 +2,11 @@ const express = require('express');
 const { adminAuth, userAuth } = require('./middlewares/auth');
 const connectDB = require('./config/database');
 const User = require('./models/user');
+const { validateSignUp } = require('../utils/validator');
 const app = express();
 app.use(express.json());
+const bcrypt = require('bcrypt');
+const validator = require('validator');
 
 connectDB().then(()=>{
     console.log("Database connectin establisted..");
@@ -16,13 +19,43 @@ connectDB().then(()=>{
 
 app.post("/signup", async(req,res)=>{
     console.log(req.body);
-    const userObj = new User(req.body)
+
     try{
+      validateSignUp(req)
+      const {firstName,lastName,emailId,password} = req.body;
+      const passwordHash = await bcrypt.hash(password, 10);
+      const userObj = new User({
+        firstName,
+        lastName,
+        emailId,
+        password:passwordHash
+      })
         let userres =  await userObj.save(); 
         return res.status(200).send({message:"User Data Saved Successfully!",data:userres})
     }catch(err){
-       return res.status(500).send("Failed to register the user"+err.message)
+       return res.status(500).send("Failed to register the user: "+err.message)
     }
+})
+
+app.post("/login", async(req,res)=>{
+  try{
+    const {emailId,password} = req.body;
+    if(!validator.isEmail(emailId)){
+      throw new Error("Email id is not valid!");
+    }
+    const user = await User.findOne({emailId:emailId});
+    if(!user){
+      throw new Error("Invalid Credentials!");
+    }
+    const isPasswordValid = await bcrypt.compare(password,user.password);
+    if(isPasswordValid){
+      res.status(200).send("Login Succssfully!")
+    }else{
+      throw new Error("Invalid Credentails!")
+    }
+  }catch(err){
+    return res.status(500).send("Failed to Login:"+err.message)
+  }
 })
 
 app.patch("/user/:userId", async (req, res) => {
